@@ -6,4 +6,15 @@
     <string name="internal_error">Internal error</string>
     <string name="location_settings_error">Location settings are inadequate, and cannot be
         fixed here. Fix in Settings.</string>
+    <string name="location_turn_on_error">Could not get current location</string>
+    <string name="temp">%s°C</string>
+    <string name="min_temp">min: %s°C</string>
+    <string name="max_temp">max: %s°C</string>
+
+    <!--Locations-->
+    <string name="select_location">Select location…</string>
+    <string name="cur_location">Current location</string>
+    <string name="london">London, UK</string>
+    <string name="new_york">New York, USA</string>
+    <string name="tokyo">Tokyo, Japan</string>
 </resources>

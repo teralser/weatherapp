@@ -7,14 +7,17 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.teralser.weatherapp.R;
-import com.teralser.weatherapp.gps.GPSManager;
+import com.teralser.weatherapp.manager.GPSManager;
 import com.teralser.weatherapp.model.Coordinates;
+import com.teralser.weatherapp.model.LocationItem;
 import com.teralser.weatherapp.mvp.presenter.impl.IBasePresenter;
 import com.teralser.weatherapp.mvp.presenter.impl.IMainPresenter;
 import com.teralser.weatherapp.mvp.view.MainView;
 import com.teralser.weatherapp.network.WeatherService;
 import com.teralser.weatherapp.utils.NetworkUtils;
 import com.teralser.weatherapp.utils.RxUtils;
+
+import java.util.ArrayList;
 
 import javax.inject.Inject;
 
@@ -42,7 +45,27 @@ public class MainPresenter extends BasePresenter implements IMainPresenter,
         this.view = view;
         getComponent().inject(this);
         gpsManager.init((Activity) view.getContext(), this);
-        getWeather(null);
+        updateLocationList();
+    }
+
+    private void updateLocationList() {
+        ArrayList<LocationItem> locationItems = gpsManager.getLocations();
+        ArrayList<String> locationNames = new ArrayList<>();
+        for (LocationItem location : locationItems) {
+            locationNames.add(location.getName());
+        }
+
+        view.setLocations(locationNames);
+    }
+
+    public void onLocationClicked(int position) {
+        view.showProgress();
+
+        if (position == 0) {
+            getWeather(null);
+        } else {
+            getWeather(gpsManager.getLocations().get(position).getCoordinates());
+        }
     }
 
     /**
@@ -64,17 +87,20 @@ public class MainPresenter extends BasePresenter implements IMainPresenter,
                     .subscribe(forecast -> {
                         if (view != null) {
                             view.setForecast(forecast);
+                            view.dismissProgress();
                         }
                     }, this::sentError);
 
             compositeSubscription.add(subscription);
         } else if (view != null) {
+            view.dismissProgress();
             view.showError(view.getContext().getString(R.string.no_internet_connection));
         }
     }
 
     private void sentError(Throwable throwable) {
         if (view != null) {
+            view.dismissProgress();
             String internalError = view.getContext().getString(R.string.internal_error);
             String error = throwable == null ? internalError : TextUtils.isEmpty(throwable.getMessage()) ?
                     internalError : throwable.getMessage();
@@ -108,12 +134,24 @@ public class MainPresenter extends BasePresenter implements IMainPresenter,
 
     @Override
     public void locationObtained(@NonNull Location location) {
-        getCurrentForecast(Coordinates.fromLocation(location));
+        Coordinates myCoordinates = Coordinates.fromLocation(location);
+        updateLocationList();
+        getCurrentForecast(myCoordinates);
     }
 
     @Override
     public void locationAccessGranted(boolean isGranted) {
-        if (view != null) view.onLocationStatusGranted(isGranted);
+        if (view != null) {
+            if (!isGranted) {
+                view.dismissProgress();
+                view.showError(view.getContext().getString(R.string.location_turn_on_error));
+                view.setForecast(null);
+            }
+        }
+    }
+
+    public Coordinates getSelectedLocationCoordinates(int position) {
+        return gpsManager.getLocations().get(position).getCoordinates();
     }
 
 }

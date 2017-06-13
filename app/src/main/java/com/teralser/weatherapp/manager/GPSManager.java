@@ -1,14 +1,17 @@
-package com.teralser.weatherapp.gps;
+package com.teralser.weatherapp.manager;
 
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
@@ -22,7 +25,14 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
 import com.teralser.weatherapp.R;
+import com.teralser.weatherapp.model.Coordinates;
+import com.teralser.weatherapp.model.LocationItem;
 import com.teralser.weatherapp.utils.Logger;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class GPSManager {
 
@@ -39,10 +49,13 @@ public class GPSManager {
     private LocationRequest mLocationRequest;
     private LocationSettingsRequest mLocationSettingsRequest;
     private LocationCallback mLocationCallback;
-    private boolean mRequestingLocationUpdates = true;
+    private boolean mRequestingLocationUpdates = false;
 
     private Activity activity;
     private LocationListener listener;
+    private GeocodeRunnable geocodeRunnable;
+
+    private ArrayList<LocationItem> locations;
 
     public GPSManager() {
     }
@@ -75,11 +88,66 @@ public class GPSManager {
                 Location mCurrentLocation = locationResult.getLastLocation();
                 Logger.logd(TAG, "onLocationResult: " + mCurrentLocation);
                 if (mCurrentLocation != null) {
+                    updateMyLocationInList(mCurrentLocation);
                     listener.locationObtained(mCurrentLocation);
                     stopLocationUpdates();
                 }
             }
         };
+    }
+
+    private void updateMyLocationInList(Location mCurrentLocation) {
+        locations.get(0).setCoordinates(Coordinates.fromLocation(mCurrentLocation));
+        getAddressFrom(mCurrentLocation, name -> {
+            if (!TextUtils.isEmpty(name)) locations.get(0).setName(name);
+            geocodeRunnable.shutdown();
+        });
+    }
+
+    private class GeocodeRunnable implements Runnable {
+
+        private volatile boolean done = false;
+        private Location location;
+        private GeocodeResultCallback callback;
+
+        public GeocodeRunnable(Location location, GeocodeResultCallback callback) {
+            this.location = location;
+            this.callback = callback;
+        }
+
+        @Override
+        public void run() {
+            while (!done) {
+                Geocoder geocoder = new Geocoder(activity, Locale.ENGLISH);
+                String result = "";
+                try {
+                    List<Address> addresses = geocoder.getFromLocation(location.getLatitude(),
+                            location.getLongitude(), 1);
+                    if (addresses != null && !addresses.isEmpty()) {
+                        result = addresses.get(0).getLocality() + ", " + addresses.get(0).getCountryName();
+                    }
+                    Logger.loge(TAG, "Addresses --> " + result);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (callback != null) callback.onResultReady(result);
+            }
+        }
+
+        public void shutdown() {
+            done = true;
+            callback = null;
+        }
+    }
+
+    private void getAddressFrom(Location location, GeocodeResultCallback callback) {
+        if (geocodeRunnable != null) {
+            geocodeRunnable.shutdown();
+            geocodeRunnable = null;
+        }
+
+        geocodeRunnable = new GeocodeRunnable(location, callback);
+        new Thread(geocodeRunnable).start();
     }
 
     private void buildLocationSettingsRequest() {
@@ -103,7 +171,7 @@ public class GPSManager {
                     int statusCode = ((ApiException) e).getStatusCode();
                     switch (statusCode) {
                         case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                            Logger.logd(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                            Logger.logd(TAG, "LocationItem settings are not satisfied. Attempting to upgrade " +
                                     "location settings ");
                             try {
                                 // Show the dialog by calling startResolutionForResult(), and check the
@@ -211,8 +279,27 @@ public class GPSManager {
         onResume();
     }
 
+    public ArrayList<LocationItem> getLocations() {
+        if (locations == null) {
+            locations = new ArrayList<>();
+            locations.add(new LocationItem(activity.getString(R.string.cur_location), null));
+            locations.add(new LocationItem(activity.getString(R.string.london),
+                    new Coordinates(51.50, -0.12)));
+            locations.add(new LocationItem(activity.getString(R.string.new_york),
+                    new Coordinates(40.71, -74.005)));
+            locations.add(new LocationItem(activity.getString(R.string.tokyo),
+                    new Coordinates(35.68, 139.69)));
+        }
+        return locations;
+    }
+
     public interface LocationListener {
         void locationObtained(@NonNull Location location);
+
         void locationAccessGranted(boolean isGranted);
+    }
+
+    public interface GeocodeResultCallback {
+        void onResultReady(String name);
     }
 }

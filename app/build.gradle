@@ -1,6 +1,13 @@
 apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
 
+allprojects {
+    repositories {
+        maven { url "https://jitpack.io" }
+        mavenCentral()
+    }
+}
+
 android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -47,6 +54,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.google.code.gson:gson:2.7'
     compile 'com.google.android.gms:play-services-location:11.0.0'
+    compile 'com.github.vlad1m1r990:Lemniscate:1.2.0'
 
     // Support library
     compile "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
@@ -68,4 +76,8 @@ dependencies {
     // Rx
     compile 'io.reactivex:rxandroid:1.2.1'
     compile 'io.reactivex:rxjava:1.1.6'
+
+    // Glide
+    compile "com.github.bumptech.glide:glide:${rootProject.ext.glideVersion}"
+    annotationProcessor "com.github.bumptech.glide:compiler:${rootProject.ext.glideVersion}"
 }

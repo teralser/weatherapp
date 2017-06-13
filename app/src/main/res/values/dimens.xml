@@ -1,3 +1,17 @@
 <resources>
-    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="activity_padding">16dp</dimen>
+    <dimen name="action_bar_height">56dp</dimen>
+
+    <dimen name="text_size_huge">40sp</dimen>
+    <dimen name="text_size_big">18sp</dimen>
+    <dimen name="text_size_medium">16sp</dimen>
+    <dimen name="text_size_small">14sp</dimen>
+
+    <dimen name="padding_big">15dp</dimen>
+    <dimen name="padding_medium">10dp</dimen>
+    <dimen name="padding_small">5dp</dimen>
+
+    <dimen name="spinner_height">48dp</dimen>
+
+    <dimen name="weather_icon_size">50dp</dimen>
 </resources>

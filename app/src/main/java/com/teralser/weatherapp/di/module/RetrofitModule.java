@@ -4,6 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.teralser.weatherapp.other.Constants;
 
 import java.lang.reflect.Field;
 
@@ -23,7 +24,7 @@ public class RetrofitModule {
     @Provides
     @Singleton
     public Retrofit provideRetrofit(Retrofit.Builder builder) {
-        return builder.baseUrl("http://api.openweathermap.org").build();
+        return builder.baseUrl(Constants.SERVER_URL).build();
     }
 
     @Provides

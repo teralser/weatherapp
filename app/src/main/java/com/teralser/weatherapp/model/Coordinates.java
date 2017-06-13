@@ -17,6 +17,11 @@ public class Coordinates implements Parcelable {
     public Coordinates() {
     }
 
+    public Coordinates(double latitude, double longitude) {
+        lat = latitude;
+        lon = longitude;
+    }
+
     public static Coordinates fromLocation(Location location) {
         return new Coordinates(location);
     }
