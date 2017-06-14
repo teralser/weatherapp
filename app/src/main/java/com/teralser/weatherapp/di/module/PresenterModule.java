@@ -20,7 +20,6 @@ public class PresenterModule {
     }
 
     @Provides
-    @Singleton
     public DetailsPresenter provideDetailsPresenter(Context context) {
         return new DetailsPresenter(context);
     }

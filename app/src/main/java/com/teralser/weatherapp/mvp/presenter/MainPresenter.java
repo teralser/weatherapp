@@ -157,8 +157,8 @@ public class MainPresenter extends BasePresenter implements IMainPresenter,
         }
     }
 
-    public Coordinates getSelectedLocationCoordinates(int position) {
-        return gpsManager.getLocations().get(position).getCoordinates();
+    public LocationItem getSelectedLocation(int position) {
+        return gpsManager.getLocations().get(position);
     }
 
 }

@@ -169,9 +169,9 @@ public class MainActivity extends BaseActivity implements MainView {
     @OnClick(R.id.forecastView)
     public void openDetails() {
         int selected = spinner.getSelectedItemPosition() - 1;
-        if (selected > 0) {
+        if (selected >= 0) {
             startActivity(DetailsActivity.createIntent(this,
-                    mainPresenter.getSelectedLocationCoordinates(selected)));
+                    mainPresenter.getSelectedLocation(selected)));
         }
     }
 
@@ -249,41 +249,48 @@ public class MainActivity extends BaseActivity implements MainView {
             weatherIcon.setVisibility(View.INVISIBLE);
         }
 
-        temp.setText(String.format(tempPattern, Math.round(forecast.getMain().getTemp())));
+        temp.setText(String.format(tempPattern,
+                String.valueOf(Math.round(forecast.getMain().getTemp()))));
         main.setText(weather != null ? weather.getMain() : "");
         description.setText(weather != null ? weather.getDescription() : "");
         averageTemp.setText(weather != null ? weather.getMain() != null ?
-                String.format(averageTempPattern, Math.round(forecast.getMain().getTempMin()),
-                        Math.round(forecast.getMain().getTempMax())) : "" : "");
+                String.format(averageTempPattern,
+                        String.valueOf(Math.round(forecast.getMain().getTempMin())),
+                        String.valueOf(Math.round(forecast.getMain().getTempMax()))) : "" : "");
         if (forecast.getSys() != null) {
-            sunrise.setText(forecast.getSys().getSunriseConverted());
+            sunrise.setText(forecast.getSys().getSunriseTimeFormatted(Constants.SHORT_TIME_FORMAT));
             sunrise.setVisibility(View.VISIBLE);
-            sunset.setText(forecast.getSys().getSunsetConverted());
+            sunset.setText(forecast.getSys().getSunsetTimeFormatted(Constants.SHORT_TIME_FORMAT));
             sunset.setVisibility(View.VISIBLE);
         } else {
             sunrise.setVisibility(View.GONE);
             sunset.setVisibility(View.GONE);
         }
-        animationManager.buildAnimationBaseIn(mainInfo).start();
 
         // additional information block
         if (forecast.getWind() != null) {
-            wind.setText(String.format(windPattern, forecast.getWind().getCardinal(),
-                    forecast.getWind().getSpeed()));
+            wind.setText(String.format(windPattern,
+                    forecast.getWind().getCardinal(),
+                    String.valueOf(forecast.getWind().getSpeed())));
             windContainer.setVisibility(View.VISIBLE);
         } else {
             windContainer.setVisibility(View.GONE);
         }
 
         if (forecast.getMain() != null) {
-            humidity.setText(String.format(humidityPattern, forecast.getMain().getHumidity()));
+            humidity.setText(String.format(humidityPattern,
+                    String.valueOf(forecast.getMain().getHumidity())));
             humidityContainer.setVisibility(View.VISIBLE);
-            pressure.setText(String.format(pressurePattern, forecast.getMain().getPressure()));
+            pressure.setText(String.format(pressurePattern,
+                    String.valueOf(forecast.getMain().getPressure())));
             pressureContainer.setVisibility(View.VISIBLE);
         } else {
             humidityContainer.setVisibility(View.GONE);
             pressureContainer.setVisibility(View.GONE);
         }
+
+        // apply animation
+        animationManager.buildAnimationBaseIn(mainInfo).start();
         animationManager.buildAnimationBaseIn(additionalInfo).start();
     }
 

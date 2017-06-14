@@ -2,10 +2,14 @@ package com.teralser.weatherapp.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.format.DateUtils;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class Forecast implements Parcelable {
 
@@ -96,6 +100,15 @@ public class Forecast implements Parcelable {
         return name;
     }
 
+    public CharSequence getRelativeTime() {
+        return DateUtils.getRelativeTimeSpanString(new Date(dt * 1000L).getTime(),
+                System.currentTimeMillis(),
+                DateUtils.DAY_IN_MILLIS);
+    }
+
+    public String getWeatherTimeFormatted(String format) {
+        return new SimpleDateFormat(format, Locale.ENGLISH).format(new Date(dt * 1000L));
+    }
 
     @Override
     public int describeContents() {
@@ -154,7 +167,8 @@ public class Forecast implements Parcelable {
 
         if (dt != forecast.dt) return false;
         if (id != forecast.id) return false;
-        if (coordinates != null ? !coordinates.equals(forecast.coordinates) : forecast.coordinates != null) return false;
+        if (coordinates != null ? !coordinates.equals(forecast.coordinates) : forecast.coordinates != null)
+            return false;
         if (weatherList != null ? !weatherList.equals(forecast.weatherList) : forecast.weatherList != null)
             return false;
         if (main != null ? !main.equals(forecast.main) : forecast.main != null) return false;

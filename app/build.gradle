@@ -55,6 +55,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.7'
     compile 'com.google.android.gms:play-services-location:11.0.0'
     compile 'com.github.vlad1m1r990:Lemniscate:1.2.0'
+    compile 'com.timehop.stickyheadersrecyclerview:library:0.4.3@aar'
+    compile 'jp.wasabeef:recyclerview-animators:2.2.6'
 
     // Support library
     compile "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"

@@ -6,13 +6,10 @@ import android.os.Parcelable;
 import com.google.gson.annotations.SerializedName;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
 public class Sys implements Parcelable {
-
-    private static final String FORMAT = "HH:mm";
 
     @SerializedName("country")
     private String country; //Country code (GB, JP etc.)
@@ -38,17 +35,16 @@ public class Sys implements Parcelable {
         return sunset;
     }
 
-    public String getSunriseConverted(){
-        return convertTimestamp(sunrise);
+    public String getSunriseTimeFormatted(String format) {
+        return convertTimestamp(sunrise, format);
     }
 
-    public String getSunsetConverted(){
-        return convertTimestamp(sunset);
+    public String getSunsetTimeFormatted(String format) {
+        return convertTimestamp(sunset, format);
     }
 
-    private String convertTimestamp(long time) {
-        Date df = new Date(time * 1000L);
-        return new SimpleDateFormat(FORMAT, Locale.ENGLISH).format(df);
+    private String convertTimestamp(long time, String format) {
+        return new SimpleDateFormat(format, Locale.ENGLISH).format(new Date(time * 1000L));
     }
 
     @Override
