@@ -2,6 +2,7 @@ package com.teralser.weatherapp.manager;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -29,7 +30,6 @@ import com.teralser.weatherapp.model.Coordinates;
 import com.teralser.weatherapp.model.LocationItem;
 import com.teralser.weatherapp.utils.Logger;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -51,13 +51,15 @@ public class GPSManager {
     private LocationCallback mLocationCallback;
     private boolean mRequestingLocationUpdates = false;
 
+    private Context appContext;
     private Activity activity;
     private LocationListener listener;
     private GeocodeRunnable geocodeRunnable;
 
     private ArrayList<LocationItem> locations;
 
-    public GPSManager() {
+    public GPSManager(Context context) {
+        appContext = context;
     }
 
     public void init(Activity activity, @NonNull LocationListener locationListener) {
@@ -88,37 +90,41 @@ public class GPSManager {
                 Location mCurrentLocation = locationResult.getLastLocation();
                 Logger.logd(TAG, "onLocationResult: " + mCurrentLocation);
                 if (mCurrentLocation != null) {
-                    updateMyLocationInList(mCurrentLocation);
-                    listener.locationObtained(mCurrentLocation);
                     stopLocationUpdates();
+                    updateMyLocationInList(mCurrentLocation);
                 }
             }
         };
     }
 
     private void updateMyLocationInList(Location mCurrentLocation) {
-        locations.get(0).setCoordinates(Coordinates.fromLocation(mCurrentLocation));
         getAddressFrom(mCurrentLocation, name -> {
-            if (!TextUtils.isEmpty(name)) locations.get(0).setName(name);
             geocodeRunnable.shutdown();
+
+            locations.get(0).setCoordinates(Coordinates.fromLocation(mCurrentLocation));
+            if (!TextUtils.isEmpty(name)) {
+                locations.get(0).setName(name);
+            }
+            listener.locationObtained(mCurrentLocation);
         });
     }
 
-    private class GeocodeRunnable implements Runnable {
+    public static class GeocodeRunnable implements Runnable {
 
         private volatile boolean done = false;
+        private Geocoder geocoder;
         private Location location;
         private GeocodeResultCallback callback;
 
-        public GeocodeRunnable(Location location, GeocodeResultCallback callback) {
+        public GeocodeRunnable(Context appContext, Location location, GeocodeResultCallback callback) {
             this.location = location;
             this.callback = callback;
+            geocoder = new Geocoder(appContext, Locale.ENGLISH);
         }
 
         @Override
         public void run() {
             while (!done) {
-                Geocoder geocoder = new Geocoder(activity, Locale.ENGLISH);
                 String result = "";
                 try {
                     List<Address> addresses = geocoder.getFromLocation(location.getLatitude(),
@@ -127,7 +133,7 @@ public class GPSManager {
                         result = addresses.get(0).getLocality() + ", " + addresses.get(0).getCountryName();
                     }
                     Logger.loge(TAG, "Addresses --> " + result);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 if (callback != null) callback.onResultReady(result);
@@ -137,16 +143,21 @@ public class GPSManager {
         public void shutdown() {
             done = true;
             callback = null;
+            geocoder = null;
+        }
+
+        public interface GeocodeResultCallback {
+            void onResultReady(String name);
         }
     }
 
-    private void getAddressFrom(Location location, GeocodeResultCallback callback) {
+    private void getAddressFrom(Location location, GeocodeRunnable.GeocodeResultCallback callback) {
         if (geocodeRunnable != null) {
             geocodeRunnable.shutdown();
             geocodeRunnable = null;
         }
 
-        geocodeRunnable = new GeocodeRunnable(location, callback);
+        geocodeRunnable = new GeocodeRunnable(appContext, location, callback);
         new Thread(geocodeRunnable).start();
     }
 
@@ -226,8 +237,11 @@ public class GPSManager {
     }
 
     public void onDestroy() {
+        appContext = null;
         listener = null;
         activity = null;
+        mFusedLocationClient = null;
+        mSettingsClient = null;
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -297,9 +311,5 @@ public class GPSManager {
         void locationObtained(@NonNull Location location);
 
         void locationAccessGranted(boolean isGranted);
-    }
-
-    public interface GeocodeResultCallback {
-        void onResultReady(String name);
     }
 }

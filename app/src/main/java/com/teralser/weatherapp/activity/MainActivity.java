@@ -1,6 +1,6 @@
 package com.teralser.weatherapp.activity;
 
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -59,23 +59,41 @@ public class MainActivity extends BaseActivity implements MainView {
     @BindView(R.id.main)
     TextView main;
 
-    @BindView(R.id.descr)
-    TextView descr;
+    @BindView(R.id.description)
+    TextView description;
 
-    @BindView(R.id.tempInfo)
-    View tempInfo;
+    @BindView(R.id.sunrise)
+    TextView sunrise;
+
+    @BindView(R.id.sunset)
+    TextView sunset;
 
     @BindView(R.id.weatherIcon)
     ImageView weatherIcon;
 
-    @BindView(R.id.minTemp)
-    TextView minTemp;
+    @BindView(R.id.averageTemp)
+    TextView averageTemp;
 
-    @BindView(R.id.maxTemp)
-    TextView maxTemp;
+    @BindView(R.id.additionalInfo)
+    View additionalInfo;
 
-    @BindView(R.id.arrowDetails)
-    View arrowDetails;
+    @BindView(R.id.windContainer)
+    View windContainer;
+
+    @BindView(R.id.wind)
+    TextView wind;
+
+    @BindView(R.id.humidityContainer)
+    View humidityContainer;
+
+    @BindView(R.id.humidity)
+    TextView humidity;
+
+    @BindView(R.id.pressureContainer)
+    View pressureContainer;
+
+    @BindView(R.id.pressure)
+    TextView pressure;
 
     @BindString(R.string.select_location)
     String hint;
@@ -83,11 +101,17 @@ public class MainActivity extends BaseActivity implements MainView {
     @BindString(R.string.temp)
     String tempPattern;
 
-    @BindString(R.string.min_temp)
-    String minTempPattern;
+    @BindString(R.string.average_temp)
+    String averageTempPattern;
 
-    @BindString(R.string.max_temp)
-    String maxTempPattern;
+    @BindString(R.string.wind_pattern)
+    String windPattern;
+
+    @BindString(R.string.humidity_pattern)
+    String humidityPattern;
+
+    @BindString(R.string.pressure_pattern)
+    String pressurePattern;
 
     private LocationsAdapter adapter;
     private boolean initComplete;
@@ -138,49 +162,54 @@ public class MainActivity extends BaseActivity implements MainView {
     }
 
     @Override
-    public Context getContext() {
+    public Activity getActivity() {
         return this;
     }
 
-    @OnClick(R.id.weatherDataContainer)
+    @OnClick(R.id.forecastView)
     public void openDetails() {
-        startActivity(DetailsActivity.createIntent(this,
-                mainPresenter.getSelectedLocationCoordinates(spinner.getSelectedItemPosition() - 1)));
+        int selected = spinner.getSelectedItemPosition() - 1;
+        if (selected > 0) {
+            startActivity(DetailsActivity.createIntent(this,
+                    mainPresenter.getSelectedLocationCoordinates(selected)));
+        }
     }
 
     @Override
     public void setLocations(ArrayList<String> locations) {
         Logger.logd(TAG, "setLocations: " + locations);
 
-        if (adapter == null) {
-            initComplete = false;
-            adapter = LocationsAdapter.init(this, R.layout.item_spinner,
-                    R.layout.item_spinner_dropdown, locations, hint);
-            spinner.setAdapter(adapter);
-            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                    Logger.logd(TAG, "setOnItemSelected: " + i);
-                    if (initComplete) {
-                        previousSelected = i;
-                        mainPresenter.onLocationClicked(i - 1);
-                    } else {
-                        if (previousSelected != 0) {
-                            spinner.setSelection(previousSelected);
-                            previousSelected = 0;
+        runOnUiThread(() -> {
+            if (adapter == null) {
+                initComplete = false;
+                adapter = LocationsAdapter.init(MainActivity.this, R.layout.item_spinner,
+                        R.layout.item_spinner_dropdown, locations, hint);
+                spinner.setAdapter(adapter);
+                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                        Logger.logd(TAG, "setOnItemSelected: " + i);
+                        if (initComplete) {
+                            previousSelected = i;
+                            mainPresenter.onLocationClicked(i - 1);
+                        } else {
+                            if (previousSelected != 0) {
+                                spinner.setSelection(previousSelected);
+                                previousSelected = 0;
+                            }
+                            initComplete = true;
                         }
-                        initComplete = true;
                     }
-                }
 
-                @Override
-                public void onNothingSelected(AdapterView<?> adapterView) {
-                    Logger.logd(TAG, "onNothingSelected");
-                }
-            });
-        } else {
-            adapter.updateList(locations);
-        }
+                    @Override
+                    public void onNothingSelected(AdapterView<?> adapterView) {
+                        Logger.logd(TAG, "onNothingSelected");
+                    }
+                });
+            } else {
+                adapter.updateList(locations);
+            }
+        });
     }
 
     @Override
@@ -199,8 +228,7 @@ public class MainActivity extends BaseActivity implements MainView {
 
     private void removePreviousInfo() {
         animationManager.buildAnimationBaseOut(mainInfo).translationY(-50f).start();
-        animationManager.buildAnimationBaseOut(tempInfo).translationY(50f).start();
-        animationManager.buildAnimationBaseOut(arrowDetails).translationX(50f).start();
+        animationManager.buildAnimationBaseOut(additionalInfo).translationY(50f).start();
     }
 
     private void showSelectedInfo(Forecast forecast) {
@@ -211,25 +239,52 @@ public class MainActivity extends BaseActivity implements MainView {
         }
 
         // main information block
-        temp.setText(String.format(tempPattern, Math.round(forecast.getMain().getTemp())));
-        main.setText(weather != null ? weather.getMain() : "");
-        descr.setText(weather != null ? weather.getDescription() : "");
-        animationManager.buildAnimationBaseIn(mainInfo).start();
-
-        // temperature information block
         if (weather != null) {
             Glide.with(this)
                     .load(String.format(Constants.IMAGE_URL, weather.getIcon()))
                     .into(weatherIcon);
+            weatherIcon.setVisibility(View.VISIBLE);
         } else {
             weatherIcon.setImageDrawable(null);
+            weatherIcon.setVisibility(View.INVISIBLE);
         }
-        minTemp.setText(String.format(minTempPattern, forecast.getMain().getTempMin()));
-        maxTemp.setText(String.format(maxTempPattern, forecast.getMain().getTempMax()));
-        animationManager.buildAnimationBaseIn(tempInfo).start();
 
-        // arrow
-        animationManager.buildAnimationBaseIn(arrowDetails).start();
+        temp.setText(String.format(tempPattern, Math.round(forecast.getMain().getTemp())));
+        main.setText(weather != null ? weather.getMain() : "");
+        description.setText(weather != null ? weather.getDescription() : "");
+        averageTemp.setText(weather != null ? weather.getMain() != null ?
+                String.format(averageTempPattern, Math.round(forecast.getMain().getTempMin()),
+                        Math.round(forecast.getMain().getTempMax())) : "" : "");
+        if (forecast.getSys() != null) {
+            sunrise.setText(forecast.getSys().getSunriseConverted());
+            sunrise.setVisibility(View.VISIBLE);
+            sunset.setText(forecast.getSys().getSunsetConverted());
+            sunset.setVisibility(View.VISIBLE);
+        } else {
+            sunrise.setVisibility(View.GONE);
+            sunset.setVisibility(View.GONE);
+        }
+        animationManager.buildAnimationBaseIn(mainInfo).start();
+
+        // additional information block
+        if (forecast.getWind() != null) {
+            wind.setText(String.format(windPattern, forecast.getWind().getCardinal(),
+                    forecast.getWind().getSpeed()));
+            windContainer.setVisibility(View.VISIBLE);
+        } else {
+            windContainer.setVisibility(View.GONE);
+        }
+
+        if (forecast.getMain() != null) {
+            humidity.setText(String.format(humidityPattern, forecast.getMain().getHumidity()));
+            humidityContainer.setVisibility(View.VISIBLE);
+            pressure.setText(String.format(pressurePattern, forecast.getMain().getPressure()));
+            pressureContainer.setVisibility(View.VISIBLE);
+        } else {
+            humidityContainer.setVisibility(View.GONE);
+            pressureContainer.setVisibility(View.GONE);
+        }
+        animationManager.buildAnimationBaseIn(additionalInfo).start();
     }
 
     @Override

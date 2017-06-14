@@ -59,11 +59,6 @@ public class DetailsActivity extends BaseActivity implements DetailView {
     }
 
     @Override
-    public Context getContext() {
-        return this;
-    }
-
-    @Override
     public void setForecast(List<Forecast> forecastList) {
         Logger.logd(TAG, "setForecast: " + forecastList);
     }

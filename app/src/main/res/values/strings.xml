@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">WeatherApp</string>
+    <string name="wind">Wind</string>
+    <string name="humidity">Humidity</string>
+    <string name="pressure">Pressure</string>
 
     <!--Errors-->
     <string name="no_internet_connection">No internet connection</string>
@@ -7,9 +10,13 @@
     <string name="location_settings_error">Location settings are inadequate, and cannot be
         fixed here. Fix in Settings.</string>
     <string name="location_turn_on_error">Could not get current location</string>
-    <string name="temp">%s°C</string>
-    <string name="min_temp">min: %s°C</string>
-    <string name="max_temp">max: %s°C</string>
+
+    <!--Patterns-->
+    <string name="temp" formatted="false">%s°C</string>
+    <string name="average_temp" formatted="false">%s°/%s°</string>
+    <string name="wind_pattern" formatted="false">%s, %s m/s</string>
+    <string name="humidity_pattern">%1$d%%</string>
+    <string name="pressure_pattern">%s hPa</string>
 
     <!--Locations-->
     <string name="select_location">Select location…</string>

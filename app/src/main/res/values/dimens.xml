@@ -2,7 +2,8 @@
     <dimen name="activity_padding">16dp</dimen>
     <dimen name="action_bar_height">56dp</dimen>
 
-    <dimen name="text_size_huge">40sp</dimen>
+    <dimen name="text_size_huge">50sp</dimen>
+    <dimen name="text_size_great">24sp</dimen>
     <dimen name="text_size_big">18sp</dimen>
     <dimen name="text_size_medium">16sp</dimen>
     <dimen name="text_size_small">14sp</dimen>

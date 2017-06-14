@@ -7,6 +7,8 @@ import com.google.gson.annotations.SerializedName;
 
 public class Wind implements Parcelable {
 
+    private static final String[] CARDINALS = {"N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"};
+
     @SerializedName("speed")
     private double speed; //Wind speed. Unit Metric: meter/sec
 
@@ -24,6 +26,9 @@ public class Wind implements Parcelable {
         return deg;
     }
 
+    public String getCardinal() {
+        return CARDINALS[(int) Math.round((deg % 360) / 45)];
+    }
 
     @Override
     public int describeContents() {

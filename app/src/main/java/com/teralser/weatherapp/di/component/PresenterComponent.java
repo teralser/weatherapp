@@ -1,5 +1,6 @@
 package com.teralser.weatherapp.di.component;
 
+import com.teralser.weatherapp.di.module.ApplicationModule;
 import com.teralser.weatherapp.di.module.GPSModule;
 import com.teralser.weatherapp.di.module.WeatherModule;
 import com.teralser.weatherapp.mvp.presenter.DetailsPresenter;
@@ -10,7 +11,7 @@ import javax.inject.Singleton;
 import dagger.Component;
 
 @Singleton
-@Component(modules = {GPSModule.class, WeatherModule.class})
+@Component(modules = {ApplicationModule.class, GPSModule.class, WeatherModule.class})
 public interface PresenterComponent {
 
     void inject(MainPresenter presenter);

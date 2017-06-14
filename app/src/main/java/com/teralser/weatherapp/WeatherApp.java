@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.teralser.weatherapp.di.component.ActivityComponent;
 import com.teralser.weatherapp.di.component.DaggerActivityComponent;
+import com.teralser.weatherapp.di.module.ApplicationModule;
 
 public class WeatherApp extends Application {
 
@@ -12,10 +13,11 @@ public class WeatherApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        activityComponent = DaggerActivityComponent.builder().build();
+        activityComponent = DaggerActivityComponent.builder()
+                .applicationModule(new ApplicationModule(this)).build();
     }
 
-    public ActivityComponent getComponent() {
+    public ActivityComponent getActivityComponent() {
         return activityComponent;
     }
 }

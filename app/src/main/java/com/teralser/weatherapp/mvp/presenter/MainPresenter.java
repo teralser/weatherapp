@@ -1,12 +1,13 @@
 package com.teralser.weatherapp.mvp.presenter;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.teralser.weatherapp.R;
+import com.teralser.weatherapp.di.component.PresenterComponent;
 import com.teralser.weatherapp.manager.GPSManager;
 import com.teralser.weatherapp.model.Coordinates;
 import com.teralser.weatherapp.model.LocationItem;
@@ -37,14 +38,19 @@ public class MainPresenter extends BasePresenter implements IMainPresenter,
     private CompositeSubscription compositeSubscription = new CompositeSubscription();
 
     @Inject
-    public MainPresenter() {
+    public MainPresenter(Context context) {
+        super(context);
+    }
+
+    @Override
+    protected void setUpComponent(PresenterComponent presenterComponent) {
+        presenterComponent.inject(this);
     }
 
     @Override
     public void init(MainView view) {
         this.view = view;
-        getComponent().inject(this);
-        gpsManager.init((Activity) view.getContext(), this);
+        gpsManager.init(view.getActivity(), this);
         updateLocationList();
     }
 
@@ -81,7 +87,7 @@ public class MainPresenter extends BasePresenter implements IMainPresenter,
     }
 
     private void getCurrentForecast(Coordinates coordinates) {
-        if (NetworkUtils.isNetworkAvailable(view.getContext())) {
+        if (NetworkUtils.isNetworkAvailable(appContext)) {
             Subscription subscription = weatherService.getCurrentForecast(coordinates)
                     .compose(RxUtils.applySchedulers())
                     .subscribe(forecast -> {
@@ -94,14 +100,14 @@ public class MainPresenter extends BasePresenter implements IMainPresenter,
             compositeSubscription.add(subscription);
         } else if (view != null) {
             view.dismissProgress();
-            view.showError(view.getContext().getString(R.string.no_internet_connection));
+            view.showError(appContext.getString(R.string.no_internet_connection));
         }
     }
 
     private void sentError(Throwable throwable) {
         if (view != null) {
             view.dismissProgress();
-            String internalError = view.getContext().getString(R.string.internal_error);
+            String internalError = appContext.getString(R.string.internal_error);
             String error = throwable == null ? internalError : TextUtils.isEmpty(throwable.getMessage()) ?
                     internalError : throwable.getMessage();
             view.showError(error);
@@ -118,6 +124,7 @@ public class MainPresenter extends BasePresenter implements IMainPresenter,
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         gpsManager.onDestroy();
         compositeSubscription.clear();
         view = null;
@@ -144,7 +151,7 @@ public class MainPresenter extends BasePresenter implements IMainPresenter,
         if (view != null) {
             if (!isGranted) {
                 view.dismissProgress();
-                view.showError(view.getContext().getString(R.string.location_turn_on_error));
+                view.showError(appContext.getString(R.string.location_turn_on_error));
                 view.setForecast(null);
             }
         }

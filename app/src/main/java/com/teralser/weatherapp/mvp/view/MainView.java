@@ -1,5 +1,6 @@
 package com.teralser.weatherapp.mvp.view;
 
+import android.app.Activity;
 import android.content.Context;
 
 import com.teralser.weatherapp.model.Forecast;
@@ -7,7 +8,7 @@ import com.teralser.weatherapp.model.Forecast;
 import java.util.ArrayList;
 
 public interface MainView {
-    Context getContext();
+    Activity getActivity();
 
     void setLocations(ArrayList<String> locations);
 

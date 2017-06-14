@@ -1,5 +1,7 @@
 package com.teralser.weatherapp.di.module;
 
+import android.content.Context;
+
 import com.teralser.weatherapp.mvp.presenter.DetailsPresenter;
 import com.teralser.weatherapp.mvp.presenter.MainPresenter;
 
@@ -13,13 +15,13 @@ public class PresenterModule {
 
     @Provides
     @Singleton
-    public MainPresenter provideMainPresenter() {
-        return new MainPresenter();
+    public MainPresenter provideMainPresenter(Context context) {
+        return new MainPresenter(context);
     }
 
     @Provides
     @Singleton
-    public DetailsPresenter provideDetailsPresenter() {
-        return new DetailsPresenter();
+    public DetailsPresenter provideDetailsPresenter(Context context) {
+        return new DetailsPresenter(context);
     }
 }

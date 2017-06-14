@@ -1,8 +1,10 @@
 package com.teralser.weatherapp.mvp.presenter;
 
+import android.content.Context;
 import android.text.TextUtils;
 
 import com.teralser.weatherapp.R;
+import com.teralser.weatherapp.di.component.PresenterComponent;
 import com.teralser.weatherapp.model.Coordinates;
 import com.teralser.weatherapp.model.ForecastListResponse;
 import com.teralser.weatherapp.mvp.presenter.impl.IBasePresenter;
@@ -27,18 +29,22 @@ public class DetailsPresenter extends BasePresenter implements IDetailsPresenter
     private CompositeSubscription compositeSubscription = new CompositeSubscription();
 
     @Inject
-    public DetailsPresenter() {
+    public DetailsPresenter(Context context) {
+        super(context);
     }
 
+    @Override
+    protected void setUpComponent(PresenterComponent presenterComponent) {
+        presenterComponent.inject(this);
+    }
 
     @Override
     public void init(DetailView view) {
         this.view = view;
-        getComponent().inject(this);
     }
 
     public void get5daysForecast(Coordinates coordinates) {
-        if (NetworkUtils.isNetworkAvailable(view.getContext())) {
+        if (NetworkUtils.isNetworkAvailable(appContext)) {
             Subscription subscription = weatherService.get5daysForecast(coordinates)
                     .compose(RxUtils.applySchedulers())
                     .map(ForecastListResponse::getForecastList)
@@ -50,13 +56,13 @@ public class DetailsPresenter extends BasePresenter implements IDetailsPresenter
 
             compositeSubscription.add(subscription);
         } else if (view != null) {
-            view.showError(view.getContext().getString(R.string.no_internet_connection));
+            view.showError(appContext.getString(R.string.no_internet_connection));
         }
     }
 
     private void sentError(Throwable throwable) {
         if (view != null) {
-            String internalError = view.getContext().getString(R.string.internal_error);
+            String internalError = appContext.getString(R.string.internal_error);
             String error = throwable == null ? internalError : TextUtils.isEmpty(throwable.getMessage()) ?
                     internalError : throwable.getMessage();
             view.showError(error);
@@ -65,6 +71,7 @@ public class DetailsPresenter extends BasePresenter implements IDetailsPresenter
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         compositeSubscription.clear();
         view = null;
     }

@@ -1,19 +1,26 @@
 package com.teralser.weatherapp.mvp.presenter;
 
+import android.content.Context;
+
+import com.teralser.weatherapp.WeatherApp;
 import com.teralser.weatherapp.di.component.DaggerPresenterComponent;
 import com.teralser.weatherapp.di.component.PresenterComponent;
+import com.teralser.weatherapp.di.module.ApplicationModule;
 
 public abstract class BasePresenter {
 
-    private PresenterComponent presenterComponent;
+    protected Context appContext;
 
-    public BasePresenter() {
-        presenterComponent = DaggerPresenterComponent.builder().build();
+    public BasePresenter(Context context) {
+        appContext = context;
+        setUpComponent(DaggerPresenterComponent.builder()
+                .applicationModule(new ApplicationModule((WeatherApp) context.getApplicationContext()))
+                .build());
     }
 
-    protected PresenterComponent getComponent() {
-        return presenterComponent;
-    }
+    protected abstract void setUpComponent(PresenterComponent presenterComponent);
 
-    public abstract void onDestroy();
+    public void onDestroy() {
+        appContext = null;
+    }
 }
